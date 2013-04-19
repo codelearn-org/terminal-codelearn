@@ -3,7 +3,7 @@ require '../lib/session'
 require 'stringio'
 require 'json'
 require 'cgi'
-require 'moped'
+#require 'moped'
 
 ANSI_COLOR_CODE = {
 	0 => 'black',
@@ -16,8 +16,8 @@ ANSI_COLOR_CODE = {
 	7 => 'white'
 }
 
-$mongodb_session = Moped::Session.new([ "127.0.0.1:27017" ])
-$mongodb_session.use "terminal_commands"
+#$mongodb_session = Moped::Session.new([ "127.0.0.1:27017" ])
+#$mongodb_session.use "terminal_commands"
 
 #making function global as it is needed by both TerminalUser & MyServer
 def get_children_process(pid)
@@ -185,7 +185,7 @@ class MyServer < Reel::Server
 		now = Time.now
 		
 		#insert into mongo now before any errors that might come
-		$mongodb_session[:commands].insert(user: user, terminal_no: terminal_no, command: (command.nil? ? "/#{type}" : CGI::unescape(command)), type: 'input', time: "#{now}")
+		#$mongodb_session[:commands].insert(user: user, terminal_no: terminal_no, command: (command.nil? ? "/#{type}" : CGI::unescape(command)), type: 'input', time: "#{now}")
 		
 		if type == "execute"
 			command = CGI::unescape(command) if command
