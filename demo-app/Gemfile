@@ -8,6 +8,7 @@ gem 'sqlite3'
 gem 'curb'
 gem 'twitter-bootstrap-rails'
 gem 'thin'
+gem 'ruby-prof'
 
 # Gems used only for assets and not required
 # in production environments by default.

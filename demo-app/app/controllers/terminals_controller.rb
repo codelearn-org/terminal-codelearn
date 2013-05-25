@@ -13,11 +13,20 @@ class TerminalsController < ApplicationController
   end
 
   def execute
-	  url = "http://localhost:3001/#{current_user}/#{params[:terminal_id]}/execute/#{params[:command].nil? ? "" : CGI::escape(params[:command])}" 
-	  puts url
-	  http = Curl.get(url)
-	  render :json => http.body_str
-  end
+		beginning = Time.now
+
+			url = "http://localhost:3001/#{current_user}/#{params[:terminal_id]}/execute/#{params[:command].nil? ? "" : CGI::escape(params[:command])}" 
+			puts url
+			http = Curl.get(url)
+			render :json => http.body_str
+		
+		end_time = Time.now
+
+		File.open "../execute.txt", 'a+' do |file|
+			file.puts "URL: #{url}\n	Demo-app: 	 #{end_time - beginning}\n"
+		end
+
+	end
 
   def kill
 	  http = Curl.get("http://localhost:3001/#{current_user}/#{params[:terminal_id]}/kill")

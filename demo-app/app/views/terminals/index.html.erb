@@ -57,8 +57,8 @@
 		t1 = new CodelearnTerminal('terminal-1',0)
 		t1.setup()
 
-		t2 = new CodelearnTerminal('terminal-2',1)
-		t2.setup()
+		//t2 = new CodelearnTerminal('terminal-2',1)
+		//t2.setup()
 
 	});
 
@@ -75,16 +75,20 @@ function CodelearnTerminal(_id,_number) {
 
 	this.setup = function() {
 		
+		var start;
 		getElement('#myForm').ajaxForm({
 			beforeSubmit: function() {
 				getElement("#loading-img").show()
 				getElement("#output").append(getElement("input[name='command']").val())
 				getElement("input[name='command']").val('');
-				removeFirstOutputLine = true
+				removeFirstOutputLine = true;
+				start = new Date().getTime();
 				//_setTimeout(function(){ poll(fetchData) }, 1000)
 			}
-			, success: function(data) {  fetchData(data)  }
-			,complete: function() { 
+			, success: function(data) {  var end = new Date().getTime();
+    		console.log('milliseconds passed', end - start); fetchData(data)  }
+			,complete: function() {
+				
 				getElement("input[name='command']").focus(); 
 			}
 			, error: function() {
