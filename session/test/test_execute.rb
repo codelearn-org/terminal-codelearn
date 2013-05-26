@@ -1,7 +1,7 @@
 require 'curb'
 require 'net/sftp'
 
-method = "http://codelearn.net:3000/terminals/0/execute?command="
+method = "http://www.codelearn.org:3000/terminals/0/execute?command="
 commands = ["ps","cd+..","ls","pwd","cal","df","id","uptime"]
 times = []
 
@@ -15,7 +15,7 @@ commands.each do |command|
  	times << end_time - start_time
 end
 
-Net::SFTP.start('codelearn.net','ubuntu',:password => 'founders@codelearn') do |sftp|
+Net::SFTP.start('www.codelearn.org','ubuntu',:password => 'founders@codelearn') do |sftp|
   sftp.download!('terminal-codelearn/execute.txt', 'initial.txt')
 end
 
