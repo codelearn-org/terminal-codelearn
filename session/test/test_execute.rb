@@ -1,9 +1,13 @@
 require 'curb'
 require 'net/sftp'
 
+<<<<<<< HEAD
 server = 'www.codelearn.org'
 
 method = "http://#{server}:3000/terminals/0/execute?command="
+=======
+method = "http://www.codelearn.org:3000/terminals/0/execute?command="
+>>>>>>> dfdd9c8ed3925c9eb2d06919da9fe7e834bd7adf
 commands = ["ps","cd+..","ls","pwd","cal","df","id","uptime"]
 times = []
 
@@ -17,11 +21,15 @@ commands.each do |command|
  	times << end_time - start_time
 end
 
+<<<<<<< HEAD
 username = 'ubuntu'
 
 puts "Starting sftp at #{server} with username '#{username}' ...."
 
 Net::SFTP.start(server,username,:password => 'founders@codelearn') do |sftp|
+=======
+Net::SFTP.start('www.codelearn.org','ubuntu',:password => 'founders@codelearn') do |sftp|
+>>>>>>> dfdd9c8ed3925c9eb2d06919da9fe7e834bd7adf
   sftp.download!('terminal-codelearn/execute.txt', 'initial.txt')
 	sftp.remove!('terminal-codelearn/execute.txt')
 end
