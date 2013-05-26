@@ -23,7 +23,7 @@ class TerminalsController < ApplicationController
 		end_time = Time.now
 
 		File.open "../execute.txt", 'a+' do |file|
-			file.puts "URL: #{url}\n	Demo-app: 	 #{end_time - beginning}\n"
+			file.puts "URL: #{url}\n	Demo-app:    #{end_time - beginning}\n"
 		end
 
 	end

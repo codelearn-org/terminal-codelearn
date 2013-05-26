@@ -1,13 +1,13 @@
 require 'curb'
-require 'net/ftp'
+require 'net/sftp'
 
-method = "http://localhost:3000/terminals/0/execute?command="
+method = "http://codelearn.net:3000/terminals/0/execute?command="
 commands = ["ps","cd+..","ls","pwd","cal","df","id","uptime"]
 times = []
 
 commands.each do |command|
 	url = method + command
-
+	puts url
 	start_time = Time.now
 		Curl.get(url)
 	end_time = Time.now
@@ -15,9 +15,8 @@ commands.each do |command|
  	times << end_time - start_time
 end
 
-Net::FTP.open('localhost','saasbook','saasbook') do |ftp|
-	ftp.chdir('terminal-codelearn')
-  ftp.gettextfile('execute.txt', 'initial.txt')
+Net::SFTP.start('codelearn.net','ubuntu',:password => 'founders@codelearn') do |sftp|
+  sftp.download!('terminal-codelearn/execute.txt', 'initial.txt')
 end
 
 i=1
