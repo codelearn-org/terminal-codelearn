@@ -5,8 +5,8 @@ require 'json'
 require 'cgi'
 #require 'moped'
 require '../lib/code_profiler'
-# require "ruby-prof"
-
+require "ruby-prof"
+require '../lib/code_timing'
 
 ANSI_COLOR_CODE = {
 	0 => 'black',
@@ -35,7 +35,7 @@ def get_children_process(pid)
 	#Could not find a Ruby way to do this
 end
 
-class TerminalUser
+class TerminalUser < Profiler
 	
 	def initialize(user)
 		@bash = Session::Bash::new({:prog => "su #{user}"})
@@ -51,18 +51,6 @@ class TerminalUser
 		#@bash.execute "sudo -i -u #{user}"
 		@status = "waiting"
 		@bash._initialize	
-		
-=begin
-		#discard sudo data output - hence the below things
-		while !/terminal-codelearn/.match(@output) 
-			puts "waiting"
-			sleep 1
-		end
-		
-		@read_data.read
-		@output.slice!(0,@read_data.pos)
-		@read_data.rewind
-=end
 	end
 	
 	def block_for_output_to_come
@@ -81,21 +69,20 @@ class TerminalUser
 		puts @bash.inspect
 		puts "Executing command - #{command}"
 		@bash.execute(command)
-		#sleep 1
-		#block_for_output_to_come
 	end
 
-	def respond(request)
+	def respond(request,data_n,status)
 		block_for_output_to_come
 		puts "output - #{@output}"
 		data = @read_data.read
 		puts "data - #{data}"
 		@output.slice!(0,@read_data.pos)
 		@read_data.rewind
-		[sanitize_ansi_data(data), @status]
+		status[0] = @status		
+		sanitize_ansi_data(data,data_n)
 	end
 
-	def sanitize_ansi_data(data) 
+	def sanitize_ansi_data(data,data_n) 
 		data.gsub!(/\033\[1m/,"<b>")
 		data.gsub!(/\033\[0m/,"</b></span>")
 		
@@ -123,7 +110,7 @@ class TerminalUser
 			span += "'>"
 			"#{span}#{content}</b></span>"
 		}
-		data
+		data_n[0] = data
 	end
 
 	def kill_all_children(interrupt)
@@ -145,18 +132,9 @@ class TerminalUser
 			puts e
 		end
 		sleep 1
-		
-=begin
-		intermediate_parent = get_children_process(@bash.pid)[0]
-		system("kill -9 #{@parent_pid}")
-		sleep 1
-		system("kill -9 #{intermediate_parent}")
-		sleep 1
-		system("kill -9 #{@bash.pid}")
-		sleep 1
-=end
 	end
-	
+
+	profile(:block_for_output_to_come ,:execute ,:sanitize_ansi_data)
 end
 
 class MyServer < Reel::Server
@@ -188,7 +166,9 @@ class MyServer < Reel::Server
   	begin	
   		puts "url - #{request.url}"
 		nothing,user,terminal_no,type,command = request.url.split("/")
+		
 		terminal_no = terminal_no.to_i
+		
 		if $users[user].nil? 
 			puts "#{user} not found. Creating"
 			$users[user] = []
@@ -196,6 +176,7 @@ class MyServer < Reel::Server
 		elsif $users[user][terminal_no].nil?
 			$users[user][terminal_no] = TerminalUser.new(user)
 		end
+		
 		terminal_user = $users[user][terminal_no]
 		puts terminal_user.inspect
 		now = Time.now
@@ -206,9 +187,7 @@ class MyServer < Reel::Server
 		if type == "execute"
 			command = CGI::unescape(command) if command
 			puts "command #{command}"
-			#Thread::new(terminal_user, command) do |terminal_user, command|
-				terminal_user.execute(command)
-			#end
+			terminal_user.execute(command)
 		end
 
 		if type == "kill"
@@ -219,8 +198,11 @@ class MyServer < Reel::Server
 			handle_error(terminal_user, user, terminal_no, request)			
 		end
 
+		data,status = '',''		
+		terminal_user.respond(request,data,status)
+		puts "status : #{status}" 
+		puts "data : #{data}" 
 
-		data, status = terminal_user.respond(request)
 		request.respond :ok, {"Content-type" => "text/html; charset=utf-8"},  JSON.generate({:content => data, :status => status})
   
 		if !data.empty? #logging only non-empty output to keep the clutter less 
@@ -236,7 +218,7 @@ class MyServer < Reel::Server
   end
 
   def handle_error(terminal_user, user, terminal_no, request)
-  		terminal_user.kill_all
+  	terminal_user.kill_all
 		
 		$users[user][terminal_no] = nil
 		#hopefully garbage collector kicks in here & picks up the object that is made nil

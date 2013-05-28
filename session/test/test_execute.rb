@@ -1,9 +1,24 @@
 require 'curb'
 require 'net/sftp'
 
-server = 'www.codelearn.org'
+SERVER = 'localhost'
+USERNAME = ''
+PASSWORD = ''
 
-method = "http://#{server}:3000/terminals/0/execute?command="
+puts "Removing execute.txt if it exists on server..."
+
+Net::SFTP.start(SERVER,USERNAME,:password => "#{PASSWORD}") do |sftp|
+  sftp.stat!('terminal-codelearn/execute.txt') do |response|
+		if response.ok?		
+			sftp.remove!('terminal-codelearn/execute.txt')
+			puts "execute.txt removed"		
+		end	
+	end
+end
+
+puts "Connection ended"
+
+method = "http://#{SERVER}:3000/terminals/0/execute?command="
 
 commands = ["ps","cd+..","ls","pwd","cal","df","id","uptime"]
 times = []
@@ -18,28 +33,29 @@ commands.each do |command|
  	times << end_time - start_time
 end
 
+puts "Starting sftp at #{SERVER} with username '#{USERNAME}' ...."
 
-username = 'ubuntu'
-
-puts "Starting sftp at #{server} with username '#{username}' ...."
-
-Net::SFTP.start(server,username,:password => 'founders@codelearn') do |sftp|
+Net::SFTP.start(SERVER,USERNAME,:password => "#{PASSWORD}") do |sftp|
   sftp.download!('terminal-codelearn/execute.txt', 'initial.txt')
-	sftp.remove!('terminal-codelearn/execute.txt')
 end
 
 puts "sftp connection ended"
 
 demo_times = []
 reel_times = []
-i=1
+lines = [[]]
+i=0
 File.open("initial.txt", 'r').each do |line|
-	if(i%4==2)	
+	if line[/^\s*demo-app/i]	
 		demo_times << Float(line[/\d*\.\d*$/])
-	elsif (i%4==3)
+	elsif line[/^\s*reel server/i]
 		reel_times << Float(line[/\d*\.\d*$/])
+	elsif line[/^url/i]		
+		i=i.next	
+		lines[i] =[]
+	elsif !line[/^\n$/]
+		lines[i] << line
 	end
-	i = i.next
 end
 
 http_delays = []
@@ -53,7 +69,11 @@ File.open("final.txt", 'w') do |file|
 		file.puts "URL:  #{method}#{commands[i]}\n"		
 		file.puts "	Http Delay:       #{'%.4f' % (times[i]-demo_times[i])} s\n"
 		file.puts "	Demo-app Delay:   #{'%.2f' % ((demo_times[i]-reel_times[i])*1000)} ms\n"
-		file.puts "	Reel server Time: #{'%.4f' % reel_times[i]} s\n\n"
+		file.puts "	Reel server Time: #{'%.4f' % reel_times[i]} s\n"
+		lines[i].each do |line|
+			file.puts line
+		end
+		file.puts
 		i = i.next
 	end
 	avg_http =  http_delays.inject{ |sum, el| sum + el } / http_delays.size
