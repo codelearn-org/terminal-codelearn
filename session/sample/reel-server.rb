@@ -3,7 +3,7 @@ require '../lib/session'
 require 'stringio'
 require 'json'
 require 'cgi'
-#require 'moped'
+require 'moped'
 require '../lib/code_profiler'
 require "ruby-prof"
 require '../lib/code_timing'
@@ -26,8 +26,8 @@ MONGODB_PORT = '27017'
 REEL_SERVER_PORT = 3001
 
 
-#$mongodb_session = Moped::Session.new([ DEFAULT_HOST+":"+MONGODB_PORT ])
-#$mongodb_session.use "terminal_commands"
+$mongodb_session = Moped::Session.new([ DEFAULT_HOST+":"+MONGODB_PORT ])
+$mongodb_session.use "terminal_commands"
 
 #making function global as it is needed by both TerminalUser & MyServer
 def get_children_process(pid)
@@ -182,7 +182,7 @@ class MyServer < Reel::Server
 		now = Time.now
 		
 		#insert into mongo now before any errors that might come
-		#$mongodb_session[:commands].insert(user: user, terminal_no: terminal_no, command: (command.nil? ? "/#{type}" : CGI::unescape(command)), type: 'input', time: "#{now}")
+		$mongodb_session[:commands].insert(user: user, terminal_no: terminal_no, command: (command.nil? ? "/#{type}" : CGI::unescape(command)), type: 'input', time: "#{now}")
 		
 		if type == "execute"
 			command = CGI::unescape(command) if command
@@ -206,7 +206,7 @@ class MyServer < Reel::Server
 		request.respond :ok, {"Content-type" => "text/html; charset=utf-8"},  JSON.generate({:content => data, :status => status})
   
 		if !data.empty? #logging only non-empty output to keep the clutter less 
-			#$mongodb_session[:commands].insert(user: user, terminal_no: terminal_no, command: data.gsub(%r{</?[^>]+?>}, ''), type: 'output', time: "#{now}") 
+			$mongodb_session[:commands].insert(user: user, terminal_no: terminal_no, command: data.gsub(%r{</?[^>]+?>}, ''), type: 'output', time: "#{now}") 
 		end
 		
 	rescue Exception => e
