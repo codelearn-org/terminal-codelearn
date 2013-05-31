@@ -1,19 +1,34 @@
 require 'curb'
 require 'net/sftp'
+require 'json'
 
-SERVER = 'localhost'
-USERNAME = ''
-PASSWORD = ''
+SERVER = 'www.codelearn.org'
+USERNAME = 'ubuntu'
+PASSWORD = 'founders@codelearn'
+
+method = "http://#{SERVER}:3000/terminals/0/execute?command="
+
+puts "Logging in reel server..."
+
+http = Curl.get(method+"#{PASSWORD}")
+parsed = JSON.parse(http.body_str)
+
+if parsed["status"] == "complete"
+	puts "Login successful or already logged in"
+else
+	puts "Check functionality with a browser, then run this script"
+	exit
+end
 
 puts "Removing execute.txt if it exists on server..."
 
 Net::SFTP.start(SERVER,USERNAME,:password => "#{PASSWORD}") do |sftp|
-  sftp.stat!('terminal-codelearn/execute.txt') do |response|
-		if response.ok?		
-			sftp.remove!('terminal-codelearn/execute.txt')
-			puts "execute.txt removed"		
-		end	
-	end
+	begin	
+		sftp.remove!('terminal-codelearn/execute.txt')
+		puts "execute.txt removed"
+	rescue
+		puts "execute.txt not found"		
+	end	
 end
 
 puts "Connection ended"
@@ -33,13 +48,14 @@ commands.each do |command|
  	times << end_time - start_time
 end
 
-puts "Starting sftp at #{SERVER} with username '#{USERNAME}' ...."
+puts "Retrieving execute.txt from server..."
 
 Net::SFTP.start(SERVER,USERNAME,:password => "#{PASSWORD}") do |sftp|
   sftp.download!('terminal-codelearn/execute.txt', 'initial.txt')
+	puts "execute.txt downloaded"
 end
 
-puts "sftp connection ended"
+puts "Connection ended"
 
 demo_times = []
 reel_times = []
