@@ -2,9 +2,9 @@ require 'curb'
 require 'net/sftp'
 require 'json'
 
-SERVER = 'www.codelearn.org'
-USERNAME = 'ubuntu'
-PASSWORD = 'founders@codelearn'
+SERVER = 'localhost'
+USERNAME = ''
+PASSWORD = ''
 
 method = "http://#{SERVER}:3000/terminals/0/execute?command="
 
