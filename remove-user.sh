@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DIR=$1
-JAIL=/opt/terminal-demo
+DIR=/tmp/.$1
+JAIL=/opt/users-rails-apps
 
-umount $JAIL/$DIR/usr
-umount $JAIL/$DIR/lib
+#umount $JAIL/$DIR/usr
+#umount $JAIL/$DIR/lib
 rm -rf $JAIL/$DIR
