@@ -2,8 +2,8 @@
 
 JAIL_DIR=/opt/users-rails-apps
 DIR=/tmp/.$1
-#USER=user_`rand --max 4500`
-USER=user_16
+USER=user_`rand --max 4500`
+#USER=user_16
 NEW_JAIL_DIR=/opt/users-rails-apps/$DIR
 
 mkdir $NEW_JAIL_DIR
@@ -26,9 +26,9 @@ cp $JAIL_DIR/etc/group $NEW_JAIL_DIR/etc/group
 
 mkdir $NEW_JAIL_DIR/home
 chown $USER $NEW_JAIL_DIR/home
-echo "HOME=/home; cd /home; alias ls='ls --color=auto'; export PS1='\[\e[35m\]\w\[\e[0m\]\$ '" > $NEW_JAIL_DIR/home/.bashrc
+echo "HOME=/home; cd /home; alias ls='ls --color=auto'; export PS1='\w\$ '" > $NEW_JAIL_DIR/home/.bashrc
 
 #chroot --userspec guest $NEW_JAIL_DIR /bin/bash --rcfile /home/.bashrc
 #chroot --userspec $USER $NEW_JAIL_DIR /bin/bash --rcfile /home/.bashrc -c "su user_16"
 su $USER -c "ulimit -d 20000 -v 20000 -f 1000 -n 100 -s 512 -t 20 -x 20 -l 64;
-proot -b /bin:/bin -b /usr:/usr -b /lib:/lib -b /dev:/dev -r $DIR -w /home  /bin/bash --rcfile /home/.bashrc"
+proot -b /bin:/bin -b /usr:/usr -b /lib:/lib -b /dev:/dev -b /lib64:/lib64 -r $DIR -w /home  /bin/bash --rcfile /home/.bashrc"
